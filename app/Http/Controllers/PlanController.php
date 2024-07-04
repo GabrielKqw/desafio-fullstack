@@ -13,46 +13,47 @@ class PlanController extends Controller
         return response()->json($plans);
     }
 
-    public function show($id)
+    public function show(Plan $plan)
     {
-        $plan = Plan::findOrFail($id);
         return response()->json($plan);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string',
-            'price' => 'required|numeric',
-            'quota' => 'required|integer',
-            'storage' => 'required|integer',
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'quotas' => 'required|integer|min:0',
+            'storage' => 'required|integer|min:0',
         ]);
 
-        $plan = Plan::create($request->all());
+        $plan = Plan::create($validatedData);
 
-        return response()->json($plan, 201);
+        return response()->json(['message' => 'Plano criado com sucesso', 'plan' => $plan], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, Plan $plan)
     {
-        $request->validate([
-            'name' => 'string',
-            'price' => 'numeric',
-            'quota' => 'integer',
-            'storage' => 'integer',
+        $validatedData = $request->validate([
+            'name' => 'string|max:255',
+            'price' => 'numeric|min:0',
+            'quotas' => 'integer|min:0',
+            'storage' => 'integer|min:0',
         ]);
 
-        $plan = Plan::findOrFail($id);
-        $plan->update($request->all());
+        $plan->update($validatedData);
 
-        return response()->json($plan, 200);
+        return response()->json(['message' => 'Plano atualizado com sucesso', 'plan' => $plan]);
     }
 
-    public function destroy($id)
+    public function destroy(Plan $plan)
     {
-        $plan = Plan::findOrFail($id);
+        if ($plan->contracts()->where('active', true)->exists()) {
+            return response()->json(['message' => 'Não é possível excluir um plano que está sendo usado em um contrato ativo'], 400);
+        }
+
         $plan->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Plano excluído com sucesso']);
     }
 }

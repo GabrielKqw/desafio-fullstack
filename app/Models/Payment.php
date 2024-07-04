@@ -12,11 +12,22 @@ class Payment extends Model
     protected $fillable = [
         'contract_id',
         'amount',
-        'payment_date',
+        'due_date',
+        'paid_date',
     ];
+
+    protected $casts = [
+        'due_date' => 'date',
+        'paid_date' => 'date',
+    ];
+
 
     public function contract()
     {
         return $this->belongsTo(Contract::class);
+    }
+    public function isPending()
+    {
+        return $this->paid_date === null;
     }
 }

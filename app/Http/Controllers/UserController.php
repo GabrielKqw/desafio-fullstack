@@ -13,43 +13,45 @@ class UserController extends Controller
         return response()->json($users);
     }
 
-    public function show($id)
+    public function show(User $user)
     {
-        $user = User::findOrFail($id);
         return response()->json($user);
     }
 
     public function store(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string',
-            'email' => 'required|email|unique:users,email',
+        $validatedData = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
         ]);
 
-        $user = User::create($request->all());
+        $user = User::create($validatedData);
 
-        return response()->json($user, 201);
+        return response()->json(['message' => 'Usuário criado com sucesso', 'user' => $user], 201);
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($id);
-
-        $request->validate([
-            'name' => 'string',
-            'email' => 'email|unique:users,email,' . $user->id,
+        $validatedData = $request->validate([
+            'name' => 'string|max:255',
+            'email' => 'string|email|max:255|unique:users,email,' . $user->id,
         ]);
 
-        $user->update($request->all());
+        $user->update($validatedData);
 
-        return response()->json($user, 200);
+        return response()->json(['message' => 'Usuário atualizado com sucesso', 'user' => $user]);
     }
 
-    public function destroy($id)
+    public function destroy(User $user)
     {
-        $user = User::findOrFail($id);
         $user->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Usuário excluído com sucesso']);
+    }
+
+    public function getActiveContract(User $user)
+    {
+        $contract = $user->contracts()->where('active', true)->first();
+        return response()->json($contract);
     }
 }

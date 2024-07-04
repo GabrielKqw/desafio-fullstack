@@ -12,12 +12,16 @@ class Plan extends Model
     protected $fillable = [
         'name',
         'price',
-        'quota',
+        'quotas',
         'storage',
     ];
 
     public function contracts()
     {
         return $this->hasMany(Contract::class);
+    }
+    public function isActiveInAnyContract()
+    {
+        return $this->contracts()->where('active', true)->exists();
     }
 }

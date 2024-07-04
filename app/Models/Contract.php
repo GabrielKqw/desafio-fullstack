@@ -30,4 +30,8 @@ class Contract extends Model
     {
         return $this->hasMany(Payment::class);
     }
+    public static function getActiveContract($userId)
+    {
+        return self::where('user_id', $userId)->where('active', true)->first();
+    }
 }

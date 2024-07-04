@@ -4,69 +4,62 @@ namespace App\Http\Controllers;
 
 use App\Models\Contract;
 use App\Models\Plan;
-use App\Models\User;
+use App\Models\Payment;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class ContractController extends Controller
 {
-    public function index()
-    {
-        $contracts = Contract::all();
-        return response()->json($contracts);
-    }
-
-    public function show($id)
-    {
-        $contract = Contract::findOrFail($id);
-        return response()->json($contract);
-    }
-
     public function store(Request $request)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'user_id' => 'required|exists:users,id',
             'plan_id' => 'required|exists:plans,id',
-            'start_date' => 'required|date',
         ]);
 
-        $user = User::findOrFail($request->user_id);
-        $plan = Plan::findOrFail($request->plan_id);
-
-        $user->contracts()->update(['active' => false]);
+        $plan = Plan::findOrFail($validatedData['plan_id']);
 
         $contract = Contract::create([
-            'user_id' => $user->id,
-            'plan_id' => $plan->id,
-            'start_date' => $request->start_date,
+            'user_id' => $validatedData['user_id'],
+            'plan_id' => $validatedData['plan_id'],
+            'start_date' => Carbon::now(),
             'active' => true,
         ]);
 
-        return response()->json($contract, 201);
+        Payment::create([
+            'contract_id' => $contract->id,
+            'amount' => $plan->price,
+            'due_date' => Carbon::now()->addMonth(),
+        ]);
+
+        return response()->json(['message' => 'Contrato criado com sucesso', 'contract' => $contract]);
     }
 
-    public function update(Request $request, $id)
+    public function index(Request $request, $userId)
     {
-        $contract = Contract::findOrFail($id);
-
-        $request->validate([
+        $contracts = Contract::where('user_id', $userId)->get();
+        return response()->json($contracts); 
+    }
+    public function update(Request $request, Contract $contract)
+    {
+        $validatedData = $request->validate([
             'plan_id' => 'required|exists:plans,id',
-            'start_date' => 'required|date',
         ]);
 
-        $plan = Plan::findOrFail($request->plan_id);
+        $newPlan = Plan::findOrFail($validatedData['plan_id']);
+
+       
         $contract->update([
-            'plan_id' => $plan->id,
-            'start_date' => $request->start_date,
+            'plan_id' => $validatedData['plan_id'],
         ]);
 
-        return response()->json($contract, 200);
-    }
+ 
+        Payment::create([
+            'contract_id' => $contract->id, 
+            'amount' => $newPlan->price,
+            'due_date' => Carbon::now()->addMonth(),
+        ]);
 
-    public function destroy($id)
-    {
-        $contract = Contract::findOrFail($id);
-        $contract->delete();
-
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Plano alterado com sucesso', 'contract' => $contract]);
     }
 }
