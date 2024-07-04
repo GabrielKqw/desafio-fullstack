@@ -37,7 +37,7 @@ Este é um projeto de backend desenvolvido como um teste para a ImMediam. O sist
 Este projeto está longe de ser perfeito, pois foi a minha primeira experiência com Laravel. Encontrei várias dificuldades ao longo do caminho>
 
 A maior parte do conhecimento aplicado neste projeto foi obtida através de conteúdos e cursos disponíveis na internet.
-## Considerações Finais
+
  
 
 
